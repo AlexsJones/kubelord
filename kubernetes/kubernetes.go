@@ -5,14 +5,19 @@ import (
 	"os"
 	"path/filepath"
 
+	"k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	//Required to work with gcp
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
 //Configuration holds points to native and lib types
 type Configuration struct {
-	Clientset *kubernetes.Clientset
+	clientset *kubernetes.Clientset
 	config    *rest.Config
 }
 
@@ -47,5 +52,12 @@ func NewConfiguration(masterURL string, inclusterConfig bool) (*Configuration, e
 	if err != nil {
 		return nil, err
 	}
-	return &Configuration{Clientset: clientset, config: config}, nil
+	return &Configuration{clientset: clientset, config: config}, nil
+}
+
+//GetNamespace within kubernetes
+func (k *Configuration) GetNamespace(namespace string) (*v1.Namespace, error) {
+
+	ns, err := k.clientset.CoreV1().Namespaces().Get(namespace, meta.GetOptions{})
+	return ns, err
 }
