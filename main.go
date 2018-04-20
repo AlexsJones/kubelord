@@ -48,13 +48,17 @@ func main() {
 	go sig()
 	poll := flag.String("poll", "3s", "Set a poll time per refresh sweep using time.Duration format e.g. 1s")
 	flag.Parse()
-
+	//Load Kubernetes configuration ---------------------------------------------
 	color.Yellow("Loading kubernetes configuration")
-	_, err := kubernetes.NewConfiguration("", false)
+	k8sConf, err := kubernetes.NewConfiguration("", false)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
+	color.Green("OK")
+	//Load Curator --------------------------------------------------------------
+	color.Yellow("Generating Curator")
+	curator := kubernetes.NewCurator(k8sConf, kubernetes.NewDefaultFilters())
 	color.Green("OK")
 
 	d, err := time.ParseDuration(*poll)
