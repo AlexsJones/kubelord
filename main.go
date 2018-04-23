@@ -60,15 +60,27 @@ func main() {
 	color.Yellow("Generating Curator")
 	curator := kubernetes.NewCurator(k8sConf, kubernetes.NewDefaultFilters())
 	color.Green("OK")
+	//Load UI -------------------------------------------------------------------
+	//	u := ux.NewConfiguration()
 
 	d, err := time.ParseDuration(*poll)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	for {
-		log.Println("Updating...")
-		time.Sleep(d)
-	}
 
+	//Update window...
+	go func() {
+		for {
+			log.Println("Updating...")
+			if err := curator.Do(); err != nil {
+				log.Println(err.Error())
+			}
+			log.Println(curator)
+			time.Sleep(d)
+		}
+	}()
+	//	defer u.Exit()
+	//	u.Run(curator)
+	time.Sleep(time.Second * 100)
 }

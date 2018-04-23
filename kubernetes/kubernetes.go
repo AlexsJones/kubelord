@@ -61,3 +61,19 @@ func (k *Configuration) GetNamespace(namespace string) (*v1.Namespace, error) {
 	ns, err := k.clientset.CoreV1().Namespaces().Get(namespace, meta.GetOptions{})
 	return ns, err
 }
+
+//GetNamespaces within kubernetes
+func (k *Configuration) GetNamespaces() (*v1.NamespaceList, error) {
+
+	nl, err := k.clientset.CoreV1().Namespaces().List(meta.ListOptions{})
+
+	return nl, err
+}
+
+//GetPods within kubernetes
+func (k *Configuration) GetPods(namespace string) (*v1.PodList, error) {
+
+	nl, err := k.clientset.CoreV1().Pods(namespace).List(meta.ListOptions{})
+
+	return nl, err
+}

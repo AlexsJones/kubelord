@@ -1,13 +1,16 @@
 package ux
 
 import (
+	"github.com/AlexsJones/kubelord/kubernetes"
 	"github.com/gigforks/termui"
-	ui "github.com/gigforks/termui"
 )
 
 type Configuration struct {
 }
 
+func (c *Configuration) Exit() {
+	termui.Close()
+}
 func NewConfiguration() *Configuration {
 	err := termui.Init()
 	if err != nil {
@@ -17,31 +20,10 @@ func NewConfiguration() *Configuration {
 	return &Configuration{}
 }
 
-func (c *Configuration) Run() {
+func (c *Configuration) Run(curator *kubernetes.Curator) {
 
-	defer termui.Close()
-	rows1 := [][]string{
-		[]string{"header1", "header2", "header3"},
-		[]string{"你好吗", "Go-lang is so cool", "Im working on Ruby"},
-		[]string{"2016", "10", "11"},
-	}
-
-	p := ui.NewPar(":PRESS q TO QUIT DEMO")
-	p.Height = 3
-	p.Width = 50
-	p.TextFgColor = ui.ColorWhite
-	p.BorderLabel = "Text Box"
-	p.BorderFg = ui.ColorCyan
-	p.Handle("/timer/1s", func(e ui.Event) {
-		cnt := e.Data.(ui.EvtTimer)
-		if cnt.Count%2 == 0 {
-			p.TextFgColor = ui.ColorRed
-		} else {
-			p.TextFgColor = ui.ColorWhite
-		}
-	})
 	table1 := termui.NewTable()
-	table1.Rows = rows1
+	table1.Rows = curator.Namespaces
 	table1.FgColor = termui.ColorWhite
 	table1.BgColor = termui.ColorDefault
 	table1.Y = 0
@@ -51,12 +33,5 @@ func (c *Configuration) Run() {
 
 	termui.Render(table1)
 
-	termui.Handle("/sys/kbd/q", func(termui.Event) {
-		termui.StopLoop()
-	})
-	ui.Handle("/timer/1s", func(e ui.Event) {
-		termui.StopLoop()
-	})
 	termui.Loop()
-
 }
