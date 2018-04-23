@@ -61,7 +61,7 @@ func main() {
 	curator := kubernetes.NewCurator(k8sConf, kubernetes.NewDefaultFilters())
 	color.Green("OK")
 	//Load UI -------------------------------------------------------------------
-	//	u := ux.NewConfiguration()
+	//u := ux.NewConfiguration()
 
 	d, err := time.ParseDuration(*poll)
 	if err != nil {
@@ -76,11 +76,27 @@ func main() {
 			if err := curator.Do(); err != nil {
 				log.Println(err.Error())
 			}
-			log.Println(curator)
+			for _, namespace := range curator.Namespaces {
+				log.Println(namespace)
+				//svc
+				for _, svc := range curator.Services[namespace[0]] {
+					log.Printf("\t %s\n", svc)
+				}
+				//deployment
+				for _, de := range curator.Deployments[namespace[0]] {
+					log.Printf("\t %s\n", de)
+				}
+				//statefulset
+				for _, de := range curator.StatefulSets[namespace[0]] {
+					log.Printf("\t %s\n", de)
+				}
+
+			}
+
 			time.Sleep(d)
 		}
 	}()
 	//	defer u.Exit()
-	//	u.Run(curator)
+
 	time.Sleep(time.Second * 100)
 }

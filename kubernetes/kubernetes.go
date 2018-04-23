@@ -5,12 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
+	upperv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-
 	//Required to work with gcp
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
@@ -74,6 +74,30 @@ func (k *Configuration) GetNamespaces() (*v1.NamespaceList, error) {
 func (k *Configuration) GetPods(namespace string) (*v1.PodList, error) {
 
 	nl, err := k.clientset.CoreV1().Pods(namespace).List(meta.ListOptions{})
+
+	return nl, err
+}
+
+//GetServices within kubernetes
+func (k *Configuration) GetServices(namespace string) (*v1.ServiceList, error) {
+
+	nl, err := k.clientset.CoreV1().Services(namespace).List(meta.ListOptions{})
+
+	return nl, err
+}
+
+//GetDeployments within kubernetes
+func (k *Configuration) GetDeployments(namespace string) (*upperv1.DeploymentList, error) {
+
+	nl, err := k.clientset.AppsV1().Deployments(namespace).List(meta.ListOptions{})
+
+	return nl, err
+}
+
+//GetStatefulSets within kubernetes
+func (k *Configuration) GetStatefulSets(namespace string) (*upperv1.StatefulSetList, error) {
+
+	nl, err := k.clientset.AppsV1().StatefulSets(namespace).List(meta.ListOptions{})
 
 	return nl, err
 }
