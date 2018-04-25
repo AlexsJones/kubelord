@@ -1,6 +1,9 @@
 package ux
 
 import (
+	"log"
+	"time"
+
 	"github.com/AlexsJones/kubelord/kubernetes"
 	"github.com/gigforks/termui"
 )
@@ -20,18 +23,79 @@ func NewConfiguration() *Configuration {
 	return &Configuration{}
 }
 
-func (c *Configuration) Run(curator *kubernetes.Curator) {
+func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) {
 
-	table1 := termui.NewTable()
-	table1.Rows = curator.Namespaces
-	table1.FgColor = termui.ColorWhite
-	table1.BgColor = termui.ColorDefault
-	table1.Y = 0
-	table1.X = 0
-	table1.Width = 62
-	table1.Height = 7
+	//--------------------------------
+	ls := termui.NewList()
+	ls.Items = func() []string {
 
-	termui.Render(table1)
+		ns, err := conf.GetNamespaces()
+		if err != nil {
+			return []string{}
+		}
+		o := []string{}
+		for _, n := range ns.Items {
+			o = append(o, n.Name)
+		}
+		return o
+	}()
+	ls.Height = 5
+	//--------------------------------
+	bigview := termui.NewTable()
+	bigview.FgColor = termui.ColorWhite
+	bigview.BgColor = termui.ColorDefault
+	bigview.Rows = [][]string{[]string{"Deployments"}}
+	bigview.Width = 100
+	bigview.Height = 7
+	//--------------------------------
+	namespacelist, err := conf.GetNamespaces()
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	for _, namespace := range namespacelist.Items {
+		deploymentlist, err := conf.GetDeployments(namespace.Name)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		for _, deployment := range deploymentlist.Items {
+			row := []string{deployment.Name}
+			bigview.Rows = append(bigview.Rows, row)
+		}
+
+		stslist, err := conf.GetStatefulSets(namespace.Name)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		for _, sts := range stslist.Items {
+			row := []string{sts.Name}
+			bigview.Rows = append(bigview.Rows, row)
+		}
+	}
+	//Render body -------------------
+	termui.Body.AddRows(
+		termui.NewRow(
+			termui.NewCol(6, 0, ls)),
+		termui.NewRow(
+			termui.NewCol(6, 0, bigview)),
+	)
+
+	termui.Body.Align()
+
+	termui.Render(termui.Body)
+
+	termui.Handle("/sys/wnd/resize", func(e termui.Event) {
+		termui.Body.Width = termui.TermWidth()
+		termui.Body.Align()
+		termui.Clear()
+		termui.Render(termui.Body)
+	})
+
+	termui.Handle("/timer/1s", func(e termui.Event) {
+
+	})
 
 	termui.Loop()
 }
