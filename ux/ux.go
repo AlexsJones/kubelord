@@ -1,6 +1,7 @@
 package ux
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -44,15 +45,17 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 	bigview := termui.NewTable()
 	bigview.FgColor = termui.ColorWhite
 	bigview.BgColor = termui.ColorDefault
-	bigview.Rows = [][]string{[]string{"Deployments"}}
+	bigview.Rows = [][]string{[]string{"Deployments", "Type", "Replicas"}}
 	bigview.Width = 100
 	bigview.Height = 7
 	//--------------------------------
+	//Namespaces forms the first loop for recursing deployments within
 	namespacelist, err := conf.GetNamespaces()
 	if err != nil {
 		log.Println(err.Error())
 		return
 	}
+
 	for _, namespace := range namespacelist.Items {
 		deploymentlist, err := conf.GetDeployments(namespace.Name)
 		if err != nil {
@@ -60,7 +63,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 			return
 		}
 		for _, deployment := range deploymentlist.Items {
-			row := []string{deployment.Name}
+			row := []string{deployment.Name, "Deployment", fmt.Sprintf("%d", int(*deployment.Spec.Replicas))}
 			bigview.Rows = append(bigview.Rows, row)
 		}
 
@@ -70,7 +73,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 			return
 		}
 		for _, sts := range stslist.Items {
-			row := []string{sts.Name}
+			row := []string{sts.Name, "StatefulSet", fmt.Sprintf("%d", int(*sts.Spec.Replicas))}
 			bigview.Rows = append(bigview.Rows, row)
 		}
 	}
@@ -95,6 +98,10 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 
 	termui.Handle("/timer/1s", func(e termui.Event) {
 
+	})
+
+	termui.Handle("/sys/kbd/q", func(e termui.Event) {
+		termui.StopLoop()
 	})
 
 	termui.Loop()
