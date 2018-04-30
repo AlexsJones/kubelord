@@ -16,6 +16,8 @@ Kubernetes CLI dashboard
 ## usage
 `kubelord`
 
+`q` to quit the dashboard
+
 Enjoy a simple and useful dashboard for your current cluster context
 `Updates periodically`
 
