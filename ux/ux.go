@@ -27,27 +27,12 @@ func NewConfiguration() *Configuration {
 func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) {
 
 	//--------------------------------
-	ls := termui.NewList()
-	ls.Items = func() []string {
-
-		ns, err := conf.GetNamespaces()
-		if err != nil {
-			return []string{}
-		}
-		o := []string{}
-		for _, n := range ns.Items {
-			o = append(o, n.Name)
-		}
-		return o
-	}()
-	ls.Height = 5
-	//--------------------------------
 	bigview := termui.NewTable()
 	bigview.FgColor = termui.ColorWhite
 	bigview.BgColor = termui.ColorDefault
-	bigview.Rows = [][]string{[]string{"Namespace", "Deployments", "Type", "Replicas"}}
-	bigview.Width = 100
-	bigview.Height = 7
+	bigview.Rows = [][]string{[]string{"Namespace", "Deployments", "Type", "Replicas", "Status"}}
+	bigview.Width = termui.TermWidth()
+	bigview.Height = termui.TermHeight()
 	//--------------------------------
 	//Namespaces forms the first loop for recursing deployments within
 	namespacelist, err := conf.GetNamespaces()
@@ -63,7 +48,9 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 			return
 		}
 		for _, deployment := range deploymentlist.Items {
-			row := []string{namespace.Name, deployment.Name, "Deployment", fmt.Sprintf("%d", int(*deployment.Spec.Replicas))}
+			row := []string{namespace.Name, deployment.Name,
+				"Deployment", fmt.Sprintf("%d/%d", int(*deployment.Spec.Replicas), int(deployment.Status.AvailableReplicas)),
+				deployment.Status.Conditions[0].Message}
 			bigview.Rows = append(bigview.Rows, row)
 		}
 
@@ -73,21 +60,15 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 			return
 		}
 		for _, sts := range stslist.Items {
-			row := []string{namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d", int(*sts.Spec.Replicas))}
+
+			row := []string{namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d/%d", int(*sts.Spec.Replicas), int(sts.Status.CurrentReplicas)),
+				sts.Status.Conditions[0].Message}
 			bigview.Rows = append(bigview.Rows, row)
 		}
 	}
 	//Render body -------------------
-	termui.Body.AddRows(
-		termui.NewRow(
-			termui.NewCol(6, 0, ls)),
-		termui.NewRow(
-			termui.NewCol(6, 0, bigview)),
-	)
 
-	termui.Body.Align()
-
-	termui.Render(termui.Body)
+	termui.Render(bigview)
 
 	termui.Handle("/sys/wnd/resize", func(e termui.Event) {
 		termui.Body.Width = termui.TermWidth()
