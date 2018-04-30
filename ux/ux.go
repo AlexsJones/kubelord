@@ -45,7 +45,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 	bigview := termui.NewTable()
 	bigview.FgColor = termui.ColorWhite
 	bigview.BgColor = termui.ColorDefault
-	bigview.Rows = [][]string{[]string{"Deployments", "Type", "Replicas"}}
+	bigview.Rows = [][]string{[]string{"Namespace", "Deployments", "Type", "Replicas"}}
 	bigview.Width = 100
 	bigview.Height = 7
 	//--------------------------------
@@ -63,7 +63,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 			return
 		}
 		for _, deployment := range deploymentlist.Items {
-			row := []string{deployment.Name, "Deployment", fmt.Sprintf("%d", int(*deployment.Spec.Replicas))}
+			row := []string{namespace.Name, deployment.Name, "Deployment", fmt.Sprintf("%d", int(*deployment.Spec.Replicas))}
 			bigview.Rows = append(bigview.Rows, row)
 		}
 
@@ -73,7 +73,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 			return
 		}
 		for _, sts := range stslist.Items {
-			row := []string{sts.Name, "StatefulSet", fmt.Sprintf("%d", int(*sts.Spec.Replicas))}
+			row := []string{namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d", int(*sts.Spec.Replicas))}
 			bigview.Rows = append(bigview.Rows, row)
 		}
 	}
