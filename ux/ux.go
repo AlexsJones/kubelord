@@ -50,7 +50,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 		for _, deployment := range deploymentlist.Items {
 			row := []string{namespace.Name, deployment.Name,
 				"Deployment", fmt.Sprintf("%d/%d", int(*deployment.Spec.Replicas), int(deployment.Status.AvailableReplicas)),
-				deployment.Status.Conditions[0].Message}
+				deployment.Status.Conditions[len(deployment.Status.Conditions)-1].Message}
 			bigview.Rows = append(bigview.Rows, row)
 		}
 
@@ -62,7 +62,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 		for _, sts := range stslist.Items {
 
 			row := []string{namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d/%d", int(*sts.Spec.Replicas), int(sts.Status.CurrentReplicas)),
-				sts.Status.Conditions[0].Message}
+				sts.Status.Conditions[len(sts.Status.Conditions)-1].Message}
 			bigview.Rows = append(bigview.Rows, row)
 		}
 	}
