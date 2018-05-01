@@ -14,6 +14,11 @@ Kubernetes CLI dashboard
 - A simple dashboard for people who really work with kubernetes every single day across many clusters.
 
 ## usage
+
+```
+go get github.com/AlexsJones/kubelord
+```
+
 `kubelord`
 
 `q` to quit the dashboard
