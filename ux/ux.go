@@ -3,6 +3,7 @@ package ux
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/AlexsJones/kubelord/kubernetes"
@@ -37,15 +38,15 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 	//Namespaces forms the first loop for recursing deployments within
 	namespacelist, err := conf.GetNamespaces()
 	if err != nil {
-		log.Println(err.Error())
-		return
+		log.Println(fmt.Sprintf("namespaces: %s", err.Error()))
+
 	}
 
 	for _, namespace := range namespacelist.Items {
 		deploymentlist, err := conf.GetDeployments(namespace.Name)
 		if err != nil {
-			log.Println(err.Error())
-			return
+			log.Println(fmt.Sprintf("deployment: %s", err.Error()))
+
 		}
 		for _, deployment := range deploymentlist.Items {
 			row := []string{namespace.Name, deployment.Name,
@@ -56,13 +57,17 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 
 		stslist, err := conf.GetStatefulSets(namespace.Name)
 		if err != nil {
-			log.Println(err.Error())
-			return
+			log.Println(fmt.Sprintf("statefulset: %s", err.Error()))
+
 		}
 		for _, sts := range stslist.Items {
 
+			status := ""
+			if len(sts.Status.Conditions) > 0 {
+				status = sts.Status.Conditions[len(sts.Status.Conditions)-1].Message
+			}
 			row := []string{namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d/%d", int(*sts.Spec.Replicas), int(sts.Status.CurrentReplicas)),
-				sts.Status.Conditions[len(sts.Status.Conditions)-1].Message}
+				status}
 			bigview.Rows = append(bigview.Rows, row)
 		}
 	}
@@ -82,7 +87,10 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 	})
 
 	termui.Handle("/sys/kbd/q", func(e termui.Event) {
+
 		termui.StopLoop()
+		termui.Close()
+		os.Exit(0)
 	})
 
 	termui.Loop()
