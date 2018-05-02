@@ -27,6 +27,14 @@ func NewConfiguration() *Configuration {
 
 func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) {
 
+	//preview------------------------
+	p1 := termui.NewPar("Warming up the processing core...\n")
+	p1.Border = false
+	p1.Width = 40
+	p1.Height = 10
+	p1.X = 0
+	p1.Y = 0
+
 	//--------------------------------
 	bigview := termui.NewTable()
 	bigview.FgColor = termui.ColorWhite
@@ -36,44 +44,55 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 	bigview.Height = termui.TermHeight()
 	//--------------------------------
 	//Namespaces forms the first loop for recursing deployments within
-	namespacelist, err := conf.GetNamespaces()
-	if err != nil {
-		log.Println(fmt.Sprintf("namespaces: %s", err.Error()))
 
-	}
-
-	for _, namespace := range namespacelist.Items {
-		deploymentlist, err := conf.GetDeployments(namespace.Name)
+	drawBigView := func() {
+		dataSet := [][]string{[]string{"Namespace", "Deployments", "Type", "Replicas", "Status"}}
+		namespacelist, err := conf.GetNamespaces()
 		if err != nil {
-			log.Println(fmt.Sprintf("deployment: %s", err.Error()))
+			log.Println(fmt.Sprintf("namespaces: %s", err.Error()))
 
 		}
-		for _, deployment := range deploymentlist.Items {
-			row := []string{namespace.Name, deployment.Name,
-				"Deployment", fmt.Sprintf("%d/%d", int(*deployment.Spec.Replicas), int(deployment.Status.AvailableReplicas)),
-				deployment.Status.Conditions[len(deployment.Status.Conditions)-1].Message}
-			bigview.Rows = append(bigview.Rows, row)
-		}
 
-		stslist, err := conf.GetStatefulSets(namespace.Name)
-		if err != nil {
-			log.Println(fmt.Sprintf("statefulset: %s", err.Error()))
+		for _, namespace := range namespacelist.Items {
+			deploymentlist, err := conf.GetDeployments(namespace.Name)
+			if err != nil {
+				log.Println(fmt.Sprintf("deployment: %s", err.Error()))
 
-		}
-		for _, sts := range stslist.Items {
-
-			status := ""
-			if len(sts.Status.Conditions) > 0 {
-				status = sts.Status.Conditions[len(sts.Status.Conditions)-1].Message
 			}
-			row := []string{namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d/%d", int(*sts.Spec.Replicas), int(sts.Status.CurrentReplicas)),
-				status}
-			bigview.Rows = append(bigview.Rows, row)
-		}
-	}
-	//Render body -------------------
+			for _, deployment := range deploymentlist.Items {
+				row := []string{namespace.Name, deployment.Name,
+					"Deployment", fmt.Sprintf("%d/%d", int(*deployment.Spec.Replicas), int(deployment.Status.AvailableReplicas)),
+					deployment.Status.Conditions[len(deployment.Status.Conditions)-1].Message}
+				dataSet = append(dataSet, row)
+			}
 
-	termui.Render(bigview)
+			stslist, err := conf.GetStatefulSets(namespace.Name)
+			if err != nil {
+				log.Println(fmt.Sprintf("statefulset: %s", err.Error()))
+
+			}
+			for _, sts := range stslist.Items {
+
+				status := ""
+				if len(sts.Status.Conditions) > 0 {
+					status = sts.Status.Conditions[len(sts.Status.Conditions)-1].Message
+				}
+				row := []string{namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d/%d", int(*sts.Spec.Replicas), int(sts.Status.CurrentReplicas)),
+					status}
+				dataSet = append(dataSet, row)
+			}
+		}
+		bigview.Rows = dataSet
+		termui.Render(bigview)
+	}
+	//
+	// go func() {
+	// 	for {
+	// 		drawBigView()
+	// 		time.Sleep(time.Second * 5)
+	// 	}
+	// }()
+	//Render body -------------------
 
 	termui.Handle("/sys/wnd/resize", func(e termui.Event) {
 		termui.Body.Width = termui.TermWidth()
@@ -84,6 +103,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 
 	termui.Handle("/timer/1s", func(e termui.Event) {
 
+		drawBigView()
 	})
 
 	termui.Handle("/sys/kbd/q", func(e termui.Event) {
