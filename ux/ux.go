@@ -85,23 +85,18 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 		bigview.Rows = dataSet
 		termui.Render(bigview)
 	}
-	//
-	// go func() {
-	// 	for {
-	// 		drawBigView()
-	// 		time.Sleep(time.Second * 5)
-	// 	}
-	// }()
-	//Render body -------------------
+
+	termui.Render(p1)
+
+	drawBigView()
 
 	termui.Handle("/sys/wnd/resize", func(e termui.Event) {
-		termui.Body.Width = termui.TermWidth()
-		termui.Body.Align()
+		bigview.Width = termui.TermWidth()
 		termui.Clear()
-		termui.Render(termui.Body)
+		termui.Render(bigview)
 	})
 
-	termui.Handle("/timer/1s", func(e termui.Event) {
+	termui.Handle("/timer/5s", func(e termui.Event) {
 
 		drawBigView()
 	})
