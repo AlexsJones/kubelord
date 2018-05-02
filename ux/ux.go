@@ -86,10 +86,6 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 		termui.Render(bigview)
 	}
 
-	termui.Render(p1)
-
-	drawBigView()
-
 	termui.Handle("/sys/wnd/resize", func(e termui.Event) {
 		bigview.Width = termui.TermWidth()
 		termui.Clear()
@@ -97,7 +93,6 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 	})
 
 	termui.Handle("/timer/5s", func(e termui.Event) {
-
 		drawBigView()
 	})
 
