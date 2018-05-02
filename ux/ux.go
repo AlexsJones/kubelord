@@ -45,8 +45,8 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 	//--------------------------------
 	//Namespaces forms the first loop for recursing deployments within
 
-	drawBigView := func() {
-		dataSet := [][]string{[]string{"Namespace", "Deployments", "Type", "Replicas", "Status"}}
+	drawBigView := func(time int) {
+		dataSet := [][]string{[]string{fmt.Sprintf("%d", time), "Namespace", "Deployments", "Type", "Replicas", "Status"}}
 		namespacelist, err := conf.GetNamespaces()
 		if err != nil {
 			log.Println(fmt.Sprintf("namespaces: %s", err.Error()))
@@ -60,7 +60,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 
 			}
 			for _, deployment := range deploymentlist.Items {
-				row := []string{namespace.Name, deployment.Name,
+				row := []string{"", namespace.Name, deployment.Name,
 					"Deployment", fmt.Sprintf("%d/%d", int(*deployment.Spec.Replicas), int(deployment.Status.AvailableReplicas)),
 					deployment.Status.Conditions[len(deployment.Status.Conditions)-1].Message}
 				dataSet = append(dataSet, row)
@@ -77,7 +77,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 				if len(sts.Status.Conditions) > 0 {
 					status = sts.Status.Conditions[len(sts.Status.Conditions)-1].Message
 				}
-				row := []string{namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d/%d", int(*sts.Spec.Replicas), int(sts.Status.CurrentReplicas)),
+				row := []string{"", namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d/%d", int(*sts.Spec.Replicas), int(sts.Status.CurrentReplicas)),
 					status}
 				dataSet = append(dataSet, row)
 			}
@@ -86,18 +86,20 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 		termui.Render(bigview)
 	}
 
+	drawBigView(0)
+
 	termui.Handle("/sys/wnd/resize", func(e termui.Event) {
 		bigview.Width = termui.TermWidth()
 		termui.Clear()
 		termui.Render(bigview)
 	})
 
-	termui.Handle("/timer/5s", func(e termui.Event) {
-		drawBigView()
+	termui.Handle("/timer/1s", func(e termui.Event) {
+		t := e.Data.(termui.EvtTimer)
+		drawBigView(int(t.Count))
 	})
 
 	termui.Handle("/sys/kbd/q", func(e termui.Event) {
-
 		termui.StopLoop()
 		termui.Close()
 		os.Exit(0)
