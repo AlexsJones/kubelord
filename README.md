@@ -13,9 +13,14 @@ Kubernetes CLI dashboard
 
 - A simple dashboard for people who really work with kubernetes every single day across many clusters.
 
+
+##Example
+
+![gif](resources/output.gif)
+
 ## usage
 
-`Glide` is used for package management 
+`Glide` is used for package management
 
 ```
 go get github.com/AlexsJones/kubelord
