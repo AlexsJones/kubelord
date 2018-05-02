@@ -15,6 +15,8 @@ Kubernetes CLI dashboard
 
 ## usage
 
+`Glide` is used for package management 
+
 ```
 go get github.com/AlexsJones/kubelord
 ```

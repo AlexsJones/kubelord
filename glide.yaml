@@ -1,0 +1,19 @@
+package: github.com/AlexsJones/kubelord
+import:
+- package: github.com/fatih/color
+- package: github.com/gigforks/termui
+- package: k8s.io/api
+  subpackages:
+  - apps/v1beta1
+  - core/v1
+  - extensions/v1beta1
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/apis/meta/v1
+- package: k8s.io/client-go
+  subpackages:
+  - kubernetes
+  - kubernetes/typed/apps/v1beta1
+  - plugin/pkg/client/auth/gcp
+  - rest
+  - tools/clientcmd
