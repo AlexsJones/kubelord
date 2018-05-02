@@ -11,6 +11,7 @@ import (
 )
 
 type Configuration struct {
+	lastFetch time.Time
 }
 
 func NewConfiguration() *Configuration {
@@ -42,8 +43,11 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 	//--------------------------------
 	//Namespaces forms the first loop for recursing deployments within
 
-	drawBigView := func(time int) {
-		dataSet := [][]string{[]string{fmt.Sprintf("%d", time), "Namespace", "Deployments", "Type", "Replicas", "Status"}}
+	drawBigView := func(t int) {
+		//Reset timeout
+		c.lastFetch = time.Now()
+
+		dataSet := [][]string{[]string{fmt.Sprintf("%d", t), "Namespace", "Deployments", "Type", "Replicas", "Status"}}
 		namespacelist, err := conf.GetNamespaces()
 		if err != nil {
 			log.Println(fmt.Sprintf("namespaces: %s", err.Error()))
@@ -96,8 +100,6 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 		termui.Render(bigview)
 	}
 
-	drawBigView(0)
-
 	termui.Handle("/sys/wnd/resize", func(e termui.Event) {
 		bigview.Width = termui.TermWidth()
 		termui.Clear()
@@ -106,7 +108,11 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 
 	termui.Handle("/timer/1s", func(e termui.Event) {
 		t := e.Data.(termui.EvtTimer)
-		drawBigView(int(t.Count))
+		elapsed := time.Since(c.lastFetch)
+		if elapsed > time.Second*5 {
+			drawBigView(int(t.Count))
+		}
+
 	})
 
 	termui.Handle("/sys/kbd/q", func(e termui.Event) {
