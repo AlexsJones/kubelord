@@ -61,7 +61,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 			}
 			for _, deployment := range deploymentlist.Items {
 				row := []string{"", namespace.Name, deployment.Name,
-					"Deployment", fmt.Sprintf("%d/%d", int(*deployment.Spec.Replicas), int(deployment.Status.AvailableReplicas)),
+					"Deployment", fmt.Sprintf("%d/%d", int(deployment.Status.AvailableReplicas), int(*deployment.Spec.Replicas)),
 					deployment.Status.Conditions[len(deployment.Status.Conditions)-1].Message}
 				dataSet = append(dataSet, row)
 			}
@@ -77,7 +77,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 				if len(sts.Status.Conditions) > 0 {
 					status = sts.Status.Conditions[len(sts.Status.Conditions)-1].Message
 				}
-				row := []string{"", namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d/%d", int(*sts.Spec.Replicas), int(sts.Status.CurrentReplicas)),
+				row := []string{"", namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d/%d", int(sts.Status.CurrentReplicas), int(*sts.Spec.Replicas)),
 					status}
 				dataSet = append(dataSet, row)
 			}
