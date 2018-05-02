@@ -13,9 +13,6 @@ import (
 type Configuration struct {
 }
 
-func (c *Configuration) Exit() {
-	termui.Close()
-}
 func NewConfiguration() *Configuration {
 	err := termui.Init()
 	if err != nil {
@@ -52,7 +49,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 			log.Println(fmt.Sprintf("namespaces: %s", err.Error()))
 
 		}
-
+		//Deployments
 		for _, namespace := range namespacelist.Items {
 			deploymentlist, err := conf.GetDeployments(namespace.Name)
 			if err != nil {
@@ -65,7 +62,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 					deployment.Status.Conditions[len(deployment.Status.Conditions)-1].Message}
 				dataSet = append(dataSet, row)
 			}
-
+			//StatefulSets
 			stslist, err := conf.GetStatefulSets(namespace.Name)
 			if err != nil {
 				log.Println(fmt.Sprintf("statefulset: %s", err.Error()))
@@ -78,6 +75,19 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 					status = sts.Status.Conditions[len(sts.Status.Conditions)-1].Message
 				}
 				row := []string{"", namespace.Name, sts.Name, "StatefulSet", fmt.Sprintf("%d/%d", int(sts.Status.CurrentReplicas), int(*sts.Spec.Replicas)),
+					status}
+				dataSet = append(dataSet, row)
+			}
+			//CronJobs
+			cjlist, err := conf.GetCronJobs(namespace.Name)
+			if err != nil {
+				log.Println(fmt.Sprintf("cronjob: %s", err.Error()))
+
+			}
+			for _, cronjob := range cjlist.Items {
+
+				status := fmt.Sprintf("Last scheduled %s", cronjob.Status.LastScheduleTime.String())
+				row := []string{"", namespace.Name, cronjob.Name, "CronJob", "N/A",
 					status}
 				dataSet = append(dataSet, row)
 			}

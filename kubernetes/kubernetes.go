@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	appsbetav1 "k8s.io/api/apps/v1beta1"
+	v1beta "k8s.io/api/batch/v1beta1"
 	"k8s.io/api/core/v1"
 	apibetav1 "k8s.io/api/extensions/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -105,5 +106,11 @@ func (k *Configuration) GetDeployments(namespace string) (*apibetav1.DeploymentL
 //GetStatefulSets within kubernetes
 func (k *Configuration) GetStatefulSets(namespace string) (*appsbetav1.StatefulSetList, error) {
 	nl, err := k.clientset.AppsV1beta1().StatefulSets(namespace).List(meta.ListOptions{})
+	return nl, err
+}
+
+//GetCronJobs within kubernetes
+func (k *Configuration) GetCronJobs(namespace string) (*v1beta.CronJobList, error) {
+	nl, err := k.clientset.BatchV1beta1().CronJobs(namespace).List(meta.ListOptions{})
 	return nl, err
 }
