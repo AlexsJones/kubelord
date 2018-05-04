@@ -8,6 +8,7 @@ import (
 )
 
 func dataFetch(conf *kubernetes.Configuration, t int) [][]string {
+
 	dataSet := [][]string{[]string{fmt.Sprintf("%d", t), "Namespace", "Deployments", "Type", "Replicas", "Status"}}
 	namespacelist, err := conf.GetNamespaces()
 	if err != nil {

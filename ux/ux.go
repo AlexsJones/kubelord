@@ -75,9 +75,12 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 			select {
 			case data := <-c.dataBuffer:
 				bigview.Rows = data
+				termui.Body.Align()
+				termui.Render(termui.Body)
+				//TODO: It is much faster to do the data filtering here
 			default:
 			}
-			termui.Render(termui.Body)
+
 		}(int(t.Count))
 	})
 
