@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlexsJones/kubelord/kubernetes"
 	"github.com/gigforks/termui"
+	spin "github.com/tj/go-spin"
 )
 
 //Configuration ...
@@ -54,15 +55,17 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 		termui.Render(termui.Body)
 	})
 
+	s := spin.New()
+
 	//Async fetch handler...
 	go func() {
 		//initial synchronization
-		c.dataBuffer <- dataFetch(conf, 0)
+		c.dataBuffer <- dataFetch(conf, "")
 
 		for {
 			elapsed := time.Since(c.lastFetch)
 			if elapsed > time.Second*5 {
-				c.dataBuffer <- dataFetch(conf, int(elapsed.Seconds()))
+				c.dataBuffer <- dataFetch(conf, "")
 				c.lastFetch = time.Now()
 			}
 		}
@@ -70,18 +73,20 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 
 	termui.Handle("/timer/1s", func(e termui.Event) {
 		//UI Run
-		t := e.Data.(termui.EvtTimer)
-		func(i int) {
+		func() {
 			select {
 			case data := <-c.dataBuffer:
 				bigview.Rows = data
 				termui.Body.Align()
+				bigview.Rows[0][0] = s.Next()
 				termui.Render(termui.Body)
 				//TODO: It is much faster to do the data filtering here
 			default:
+				bigview.Rows[0][0] = s.Next()
+				termui.Render(termui.Body)
 			}
 
-		}(int(t.Count))
+		}()
 	})
 
 	termui.Handle("/sys/kbd/q", func(e termui.Event) {

@@ -7,9 +7,9 @@ import (
 	"github.com/AlexsJones/kubelord/kubernetes"
 )
 
-func dataFetch(conf *kubernetes.Configuration, t int) [][]string {
+func dataFetch(conf *kubernetes.Configuration, t string) [][]string {
 
-	dataSet := [][]string{[]string{fmt.Sprintf("%d", t), "Namespace", "Deployments", "Type", "Replicas", "Status"}}
+	dataSet := [][]string{[]string{t, "Namespace", "Deployments", "Type", "Replicas", "Status"}}
 	namespacelist, err := conf.GetNamespaces()
 	if err != nil {
 		log.Println(fmt.Sprintf("namespaces: %s", err.Error()))
