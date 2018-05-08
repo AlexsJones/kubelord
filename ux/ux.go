@@ -29,23 +29,26 @@ func NewConfiguration() *Configuration {
 func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) {
 
 	//preview------------------------
-	help := termui.NewPar("Filter out with (d)eployments (s)tatefulsets (c)ronjobs (r)eset/(q)uit")
-	help.Border = false
+	help := termui.NewPar("(q)uit")
+	help.Border = true
 	help.Width = termui.TermWidth()
-	help.Height = 10
-	help.PaddingTop = 5
+	help.Height = 3
 	help.X = 0
-	help.Y = termui.TermHeight()
+	help.Y = 0
 	//--------------------------------
 	bigview := termui.NewTable()
 	bigview.FgColor = termui.ColorWhite
-	bigview.Border = false
+	bigview.Border = true
 	bigview.BgColor = termui.ColorDefault
 	bigview.Rows = [][]string{[]string{"Namespace", "Deployments", "Type", "Replicas", "Status"}}
 	bigview.Width = termui.TermWidth()
 	bigview.Height = termui.TermHeight()
 	//--------------------------------
-	termui.Body.AddRows(termui.NewRow(termui.NewCol(termui.TermWidth(), 0, bigview)), termui.NewCol(termui.TermWidth(), 0, help))
+	showDeployments := true
+	showStatefulSets := true
+	showCronJobs := true
+	//--------------------------------
+	termui.Body.AddRows(termui.NewCol(3, 0, help, bigview))
 	termui.Body.Align()
 
 	termui.Handle("/sys/wnd/resize", func(e termui.Event) {
@@ -64,7 +67,7 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 
 		for {
 			elapsed := time.Since(c.lastFetch)
-			if elapsed > time.Second*5 {
+			if elapsed > poll {
 				c.dataBuffer <- dataFetch(conf, "")
 				c.lastFetch = time.Now()
 			}
@@ -76,11 +79,13 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 		func() {
 			select {
 			case data := <-c.dataBuffer:
-				bigview.Rows = data
+				bigview.Rows = func() [][]string {
+					return data
+				}()
 				termui.Body.Align()
 				bigview.Rows[0][0] = s.Next()
 				termui.Render(termui.Body)
-				//TODO: It is much faster to do the data filtering here
+
 			default:
 				bigview.Rows[0][0] = s.Next()
 				termui.Render(termui.Body)
@@ -88,7 +93,20 @@ func (c *Configuration) Run(conf *kubernetes.Configuration, poll time.Duration) 
 
 		}()
 	})
-
+	termui.Handle("/sys/kbd/d", func(e termui.Event) {
+		showDeployments = !showDeployments
+	})
+	termui.Handle("/sys/kbd/s", func(e termui.Event) {
+		showStatefulSets = !showStatefulSets
+	})
+	termui.Handle("/sys/kbd/c", func(e termui.Event) {
+		showCronJobs = !showCronJobs
+	})
+	termui.Handle("/sys/kbd/r", func(e termui.Event) {
+		showCronJobs = false
+		showDeployments = false
+		showStatefulSets = false
+	})
 	termui.Handle("/sys/kbd/q", func(e termui.Event) {
 		termui.StopLoop()
 		termui.Close()
